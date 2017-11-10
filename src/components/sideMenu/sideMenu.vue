@@ -1,14 +1,36 @@
 <template>
     <div id="sideMenu">
-        <div class="logo">
-            <img src="../../assets/lol.jpg" />
+        <div class="m-top">
+            <div class="logo">
+                <img src="../../assets/lol.jpg" />
+            </div>
+            <h2 class="title">{{ user }}</h2>
+            <h2 class="title">{{ welcome }}</h2>
+            
+            <p class="logout" @click="logout">注销</p>
         </div>
-        <h2 class="title">{{ user }}</h2>
-        <h2 class="title">{{ welcome }}</h2>
-        
-        <p class="logout" @click="logout">注销</p>
-    </div>
+        <div id="menuCon">
+            <el-menu mode="vertical">
+                
+                <el-menu-item index="1">
+                    <router-link to="/banner">轮播管理</router-link>
+                </el-menu-item>
 
+                 <el-menu-item index="2">
+                    <router-link to="/news">新闻管理</router-link>
+                </el-menu-item>
+
+                 <el-menu-item index="3">
+                    <router-link to="/friends">好友列表</router-link>
+                </el-menu-item>
+
+                 <el-menu-item index="4">
+                    <router-link to="/record">战绩查询</router-link>
+                </el-menu-item>
+                
+            </el-menu>
+        </div>
+    </div>
 </template>
 
 <script>
@@ -46,9 +68,15 @@ export default {
        width: 100%;
        color: white;
     }
+    .m-top{
+        padding-bottom: 10px;
+        border-bottom: 1px solid #393939;
+    }
+
     .title{
         font-size: 16px;
         text-align: center;
+        margin-bottom: 10px;
     }
 
     .logo img{
@@ -58,6 +86,28 @@ export default {
         font-size: 12px;
         text-decoration: underline;
         cursor: pointer;
+    }
+    #menuCon{
+        padding-top: 25px;
+        border-top: 1px solid #000; 
+    }
+    
+
+    .el-menu{
+        background-color: unset;
+        border-right: none; 
+    }
+    .el-menu-item:hover{
+        background-color: unset
+    }
+    .el-menu-item a{
+        color: #666;
+    }
+    .el-menu-item:hover a{
+        color: white;
+    }
+    .sideMenu .router-link-active{
+        color: white;
     }
 </style>
 

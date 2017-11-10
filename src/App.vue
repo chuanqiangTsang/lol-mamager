@@ -81,4 +81,11 @@ export default {
 .mainPage{
   margin-left: 250px;
 }
+*{
+  margin: 0;
+  padding: 0;
+}
+a{
+  text-decoration: none;
+}
 </style>
