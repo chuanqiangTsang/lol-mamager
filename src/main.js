@@ -8,7 +8,11 @@ import Axios from 'axios'
 import ElementUI from "element-ui";
 import 'element-ui/lib/theme-chalk/index.css';
 
+// 引入富文本编辑器
+import VueQuillEditor from 'vue-quill-editor'
+
 Vue.use(ElementUI);
+Vue.use(VueQuillEditor);
 
 Vue.config.productionTip = false
 

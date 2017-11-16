@@ -28,6 +28,15 @@
                 </template>
             </el-table-column>
     </el-table>
+    <div class="block"> 
+        <el-pagination
+            layout="prev, pager, next"
+            :page-size=pageSize
+            :total="pageAmount"
+            @current-change="showPage"
+            >
+        </el-pagination>
+    </div>
     </div> 
     <el-dialog title="添加轮播图" :visible.sync="dialogTableVisible" width="60%" class="bannerDialog">
         <el-form ref="form" >
@@ -56,6 +65,18 @@
           <el-button type="primary" @click="bannerSubmit">保存</el-button>
         </el-form>
     </el-dialog>
+
+    <el-dialog
+        title="提示"
+        :visible.sync="deleteDialogVisible"
+        width="30%"
+       >
+        <span>确认删除吗</span>
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="deleteDialogVisible = false">取 消</el-button>
+            <el-button type="primary" @click="handleDeleteBanner">确 定</el-button>
+        </span>
+    </el-dialog>
 </div>
 </template>
 
@@ -72,7 +93,10 @@ export default {
           page: 1,
           pageSize: 5,
           limit: 1,
-          fileSize: 1024 * 1024
+          fileSize: 1024 * 1024,
+          pageAmount: 5,
+          deleteDialogVisible: false,
+          bannerId: '',
       }
   },
 
@@ -80,8 +104,15 @@ export default {
       getbannerLists(){
           var _this = this;
           this.$http.get('http://127.0.0.1:3002/getBanners').then(function(res){
+              //console.log(res);
               _this.bannerLists = res.data.bannerLists;
           })
+      },
+      getbannerCount(){
+          var _this = this;
+           this.$http.get('http://127.0.0.1:3002/getBannersCount').then(function(res){
+            _this.pageAmount = res.data;
+        })
       },
       openDialog(){
           this.dialogTableVisible = true;
@@ -91,7 +122,7 @@ export default {
           this.bannerUrl = res.thumb;
       },
       removeBannerList(file){
-          this.bannerList = '';
+          this.bannerUrl = '';
       },
       chkSize(file){
           if(file.size > this.fileSize){
@@ -103,6 +134,7 @@ export default {
           }
       },
       bannerSubmit(){
+          var _this = this;
           if(this.desc == ''){
               this.$message({
                   'type': 'error',
@@ -127,17 +159,36 @@ export default {
           .then(function(res){
               if(res.data.body == "1"){
                   _this.dialogTableVisible = false;
-
+                  window.location.reload();
               }
             })
       },
       
       deleteBanner(id){
-          console.log(id)
+          this.deleteDialogVisible = true;
+          this.bannerId = id;
+      },
+      handleDeleteBanner(){
+          var _this = this;
+          this.$http.post('http://127.0.0.1:3002/deleteBanner',{"id":this.bannerId}).then(function(res){
+            if(res.data.body == "1"){
+                _this.deleteDialogVisible = false;
+                window.location.reload();
+            }
+          })
+      },
+
+      showPage(val){
+          var _this = this;
+          val = val ? val : 0;
+          this.$http.get('http://127.0.0.1:3002/getBanners?page='+val).then(function(res){
+              _this.bannerLists = res.data.bannerLists;
+          })
       }
   },
   mounted(){
       this.getbannerLists();
+      this.getbannerCount();
   },
 }
 </script>
