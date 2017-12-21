@@ -2,34 +2,36 @@
   <div id="editNews">
       <h2>添加新闻</h2>
 
-        <el-form class="newsForm" ref="form" label-width="80px">
-            <el-form-item class="newsItem" label="标题">
-                <el-input type="text" name="desc" v-model="title"></el-input>
+        <el-form class="newsForm" ref="newsForm" v-model="newsForm"  label-width="80px">
+            <el-form-item class="newsItem" label="标题" prop="title">
+                <el-input type="text" name="title" v-model="title"></el-input>
             </el-form-item>
         
         <el-form-item class="newsItem" label="上传">
             
             <el-upload
+                ref="newsUploader"
                 name="banner"
                 action="http://127.0.0.1:3002/doUploadBanner"
                 :on-success="addBannerList"
                 :on-remove="removeBannerList"
                 :before-upload="chkSize"
                 :limit="limit"
+                :file-list="newsThumbLists"
                 list-type="picture-card">
                 <i class="el-icon-plus"></i>
                 </el-upload>
                 <p class="tips">一次只能上传一张,大小不超过1M</p>
         </el-form-item>
 
-          <el-form-item class="newsItem" label="作者" name="sort" >
-               <el-input type="number" v-model="author" placeholder="数值越大排在越前"></el-input>
+          <el-form-item class="newsItem" label="作者" name="author">
+               <el-input type="text" v-model="author"></el-input>
           </el-form-item>
 
-          <el-form-item class="newsItem content" label="新闻内容" name="sort" >
+          <el-form-item class="newsItem content" label="新闻内容">
             <el-row class="form-row" :gutter="20">
              <quill-editor v-model="content"></quill-editor>
-            </el-row>
+            </el-row> 
           </el-form-item>
 
           <el-button type="primary" @click="newsSubmit">保存</el-button>
@@ -44,9 +46,22 @@
         <span>确认删除吗</span>
         <span slot="footer" class="dialog-footer">
             <el-button @click="deleteDialogVisible = false">取 消</el-button>
-            <el-button type="primary" @click="handleDeleteBanner">确 定</el-button>
+            <el-button type="primary" @click="handleDeleteBanner" >确 定</el-button>
         </span>
     </el-dialog>
+
+    <el-dialog
+      title="提示"
+      :visible.sync="newsDialogVisible"
+      width="30%"
+      center>
+      <span>添加成功</span>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="backToNewsLists">返回列表</el-button>
+        <el-button type="primary" @click="Continue('newsForm')">继续添加</el-button>
+      </span>
+    </el-dialog>
+
 </div>
   </div>
 </template>
@@ -60,15 +75,41 @@ export default {
           title: '',
           limit: 1,
           deleteDialogVisible: false,
+          newsDialogVisible: false,
           content: '',
+          newsThumb: '',
           editor: null,
+          newsForm: null,
+          newsThumbLists: [],
+          newsId: this.$route.query.id || '',
+          tipTxt:{
+            "title": this.$route.query.id ? '修改成功' : '添加成功',
+            "succ": this.$route.query.id ? '' : '添加成功',
+          }
+          
       }
   },
   components:{quillEditor},
+
   mounted(){
-      this.editor = UE.getEditor('editor',);
+    this.getOneNew();
   },
+
   methods:{
+    getOneNew(){
+      if( this.newsId ){
+      // 显示当前新闻的信息
+      var _this = this;
+      this.$http.get('http://127.0.0.1:3002/getOneNew?id=' + this.newsId).then(function(res){
+        var _data = res.data.body[0];
+        _this.title = _data.title;
+        _this.newsThumbLists = [{"name":"tem.jpg","url": _data.newsThumb}];
+        _this.author = _data.author;
+        _this.content = _data.content;
+        _this.newsThumb = _data.newsThumb;
+      });
+    }
+    },
       getbannerLists(){
           var _this = this;
           this.$http.get('http://127.0.0.1:3002/getBanners').then(function(res){
@@ -86,10 +127,10 @@ export default {
       },
 
       addBannerList(res){
-          this.bannerUrl = res.thumb;
+          this.newsThumb = res.thumb;
       },
       removeBannerList(file){
-          this.bannerUrl = '';
+          this.newsThumb = '';
       },
       chkSize(file){
           if(file.size > this.fileSize){
@@ -101,41 +142,82 @@ export default {
           }
       },
       newsSubmit(){
-          console.log(this.content);
-          return ;
           var _this = this;
-          if(this.desc == ''){
+          if(this.title == ''){
               this.$message({
                   'type': 'error',
-                  'message':'请填写描述'
+                  'message':'请填写标题'
               });
               return ;
           }
 
-          if(this.bannerUrl == ''){
+          if(this.newsThumb == ''){
               this.$message({
                   'type': 'error',
-                  'message':'轮播图不能为空'
+                  'message':'请上传新闻图片'
               });
               return ;
           }
-          this.$http.post('http://127.0.0.1:3002/doAddBanner',
+
+          if(this.content == ''){
+              this.$message({
+                  'type': 'error',
+                  'message':'新闻内容不能为空'
+              });
+              return ;
+          }
+
+          if(this.$route.query.id){
+            this.$http.post('http://127.0.0.1:3002/updateNews',
+            {
+                "title": this.title,
+                "newsThumb": this.newsThumb,
+                "author": this.author || "匿名",
+                "content": this.content,
+                "id": this.$route.query.id || ''
+            })
+            .then(function(res){
+              if(res.data.body == "1"){
+                _this.$message({
+                  type: 'success',
+                  message: res.data.msg
+                })
+              }
+              })
+          }else{
+            this.$http.post('http://127.0.0.1:3002/doAddNews',
           {
-              "desc": this.desc,
-              "sort": this.sort,
-              "thumb": this.bannerUrl
+              "title": this.title,
+              "newsThumb": this.newsThumb,
+              "author": this.author || "匿名",
+              "content": this.content
           })
           .then(function(res){
-              if(res.data.body == "1"){
-                  _this.dialogTableVisible = false;
-                  window.location.reload();
-              }
+            if(res.data.body == "1"){
+              _this.newsDialogVisible = true;
+            }
             })
+          }     
+      },
+
+      backToNewsLists(){
+          this.$router.push('/news');
+      },
+      Continue(formName){
+        this.newsDialogVisible = false;
+        if( !this.$route.query.id ){
+          this.title="";
+          this.author="";
+          this.content="";
+          this.$refs['newsUploader'].clearFiles();
+        }else{
+          this.getOneNew();
+        }
+       
       },
       
       deleteBanner(id){
-          this.deleteDialogVisible = true;
-          this.bannerId = id;
+          this.newsThumb = id;
       },
       handleDeleteBanner(){
           var _this = this;

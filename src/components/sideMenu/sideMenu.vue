@@ -19,14 +19,6 @@
                  <el-menu-item index="2">
                     <router-link to="/news">新闻管理</router-link>
                 </el-menu-item>
-
-                 <el-menu-item index="3">
-                    <router-link to="/friends">好友列表</router-link>
-                </el-menu-item>
-
-                 <el-menu-item index="4">
-                    <router-link to="/record">战绩查询</router-link>
-                </el-menu-item>
                 
             </el-menu>
         </div>
